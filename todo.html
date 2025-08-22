@@ -1,0 +1,131 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do List</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6fb; margin:0; padding:20px; color:#222; }
+    .app { max-width: 520px; margin: 0 auto; background:#fff; border-radius:12px; padding:20px; box-shadow:0 6px 16px rgba(0,0,0,0.08); }
+    h1 { text-align:center; margin: 0 0 16px; }
+    .row { display:flex; gap:10px; margin-bottom:14px; }
+    input[type="text"] { flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; }
+    button { padding:12px 14px; border:none; border-radius:8px; cursor:pointer; }
+    .add { background:#0077cc; color:#fff; }
+    .filters { display:flex; gap:8px; justify-content:center; margin:10px 0 16px; }
+    .filters button { background:#eef3f8; }
+    .filters button.active { background:#0077cc; color:#fff; }
+    ul { list-style:none; margin:0; padding:0; }
+    li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid #eee; border-radius:8px; margin-bottom:8px; background:#fff; }
+    .left { display:flex; align-items:center; gap:10px; }
+    .task { word-break:break-word; }
+    .done .task { text-decoration: line-through; opacity:0.6; }
+    .actions { display:flex; gap:6px; }
+    .small { padding:8px 10px; background:#ffce33; }
+    .danger { background:#ff5d5d; color:#fff; }
+    .back { display:block; text-align:center; margin-top:14px; color:#0077cc; text-decoration:none; font-weight:bold; }
+    .hint { text-align:center; font-size:.9rem; color:#666; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>To-Do List</h1>
+
+    <div class="row">
+      <input id="newTask" type="text" placeholder="Add a new task..." />
+      <button class="add" onclick="addTask()">Add</button>
+    </div>
+
+    <div class="filters">
+      <button id="f-all" class="active" onclick="setFilter('all')">All</button>
+      <button id="f-active" onclick="setFilter('active')">Active</button>
+      <button id="f-done" onclick="setFilter('done')">Done</button>
+    </div>
+
+    <ul id="list"></ul>
+
+    <a class="back" href="projects.html">⬅ Back to Projects</a>
+    <p class="hint">Tasks are saved automatically on this device.</p>
+  </div>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const inputEl = document.getElementById('newTask');
+    let tasks = JSON.parse(localStorage.getItem('tasks_v1') || '[]');
+    let filter = 'all';
+
+    function save() { localStorage.setItem('tasks_v1', JSON.stringify(tasks)); render(); }
+
+    function addTask() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      tasks.push({ id: Date.now(), text, done:false });
+      inputEl.value = '';
+      save();
+    }
+
+    function toggle(id) {
+      tasks = tasks.map(t => t.id===id ? {...t, done:!t.done} : t);
+      save();
+    }
+
+    function editTask(id) {
+      const t = tasks.find(x => x.id===id);
+      const newText = prompt('Edit task:', t.text);
+      if (newText !== null) {
+        t.text = newText.trim() || t.text;
+        save();
+      }
+    }
+
+    function removeTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      save();
+    }
+
+    function setFilter(f) {
+      filter = f;
+      document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+      document.getElementById('f-' + f).classList.add('active');
+      render();
+    }
+
+    function render() {
+      listEl.innerHTML = '';
+      const filtered = tasks.filter(t =>
+        filter==='all' ? true :
+        filter==='active' ? !t.done : t.done
+      );
+      filtered.forEach(t => {
+        const li = document.createElement('li');
+        li.className = t.done ? 'done' : '';
+        li.innerHTML = `
+          <div class="left">
+            <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark done">
+            <span class="task">${escapeHtml(t.text)}</span>
+          </div>
+          <div class="actions">
+            <button class="small" title="Edit">Edit</button>
+            <button class="danger small" title="Delete">Del</button>
+          </div>
+        `;
+        li.querySelector('input').addEventListener('change', () => toggle(t.id));
+        li.querySelector('.small').addEventListener('click', () => editTask(t.id));
+        li.querySelector('.danger').addEventListener('click', () => removeTask(t.id));
+        listEl.appendChild(li);
+      });
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // Enter to add
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+    render();
+  </script>
+</body>
+</html>
+
+What it does: add tasks, mark done, edit, delete, filter
