@@ -1,0 +1,57 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Add New Question</h1>
+    <form id="question-form">
+      <input type="text" id="question" placeholder="Enter question" required><br><br>
+      <input type="text" id="option1" placeholder="Option 1" required><br>
+      <input type="text" id="option2" placeholder="Option 2" required><br>
+      <input type="text" id="option3" placeholder="Option 3" required><br>
+      <input type="text" id="option4" placeholder="Option 4" required><br><br>
+      <input type="text" id="answer" placeholder="Correct Answer" required><br><br>
+      <button type="submit">Save Question</button>
+    </form>
+    <p id="message"></p>
+    <br>
+    <a href="index.html">Go to Quiz</a>
+  </div>
+
+  <script>
+    document.getElementById("question-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      // Collect input values
+      const question = document.getElementById("question").value;
+      const options = [
+        document.getElementById("option1").value,
+        document.getElementById("option2").value,
+        document.getElementById("option3").value,
+        document.getElementById("option4").value
+      ];
+      const answer = document.getElementById("answer").value;
+
+      // Build question object
+      const newQuestion = { question, options, answer };
+
+      // Get old questions from localStorage
+      let storedQuestions = JSON.parse(localStorage.getItem("quizQuestions")) || [];
+
+      // Add new question
+      storedQuestions.push(newQuestion);
+
+      // Save back to localStorage
+      localStorage.setItem("quizQuestions", JSON.stringify(storedQuestions));
+
+      document.getElementById("message").textContent = "✅ Question saved!";
+      document.getElementById("question-form").reset();
+    });
+  </script>
+</body>
+</html>
